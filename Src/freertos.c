@@ -146,7 +146,6 @@ void systrm_task(void const * argument)
   /* USER CODE BEGIN systrm_task */
   osDelay(1000);
 
-  socket_tcp_server_task((void*)1234);
   /* Infinite loop */
   for(;;)
   {
@@ -166,6 +165,7 @@ void serial_task(void const * argument)
   
   sprintf(client_socket->target_server_ip,"192.168.1.179");
   client_socket->target_server_port = 5566;
+  client_socket->task_signal = socket_queueHandle;
   client_socket->recv_buf = g_recv_buf;
   
   socket_creat_client_task("client_task_a",client_socket);
@@ -176,6 +176,7 @@ void serial_task(void const * argument)
 
   sprintf(client_socket1->target_server_ip,"192.168.1.179");
   client_socket1->target_server_port = 5566;
+  client_socket1->task_signal = socket_queueHandle;
   client_socket1->recv_buf = g_recv_buf;
   
   socket_creat_client_task("client_task_b",client_socket1);
@@ -187,6 +188,7 @@ void serial_task(void const * argument)
 
   sprintf(client_socket2->target_server_ip,"192.168.1.179");
   client_socket2->target_server_port = 5566;
+  client_socket2->task_signal = socket_queueHandle;
   client_socket2->recv_buf = g_recv_buf;
   
   socket_creat_client_task("client_task_c",client_socket2);
@@ -198,11 +200,12 @@ void serial_task(void const * argument)
 
   sprintf(client_socket3->target_server_ip,"192.168.1.179");
   client_socket3->target_server_port = 5566;
+  client_socket3->task_signal = socket_queueHandle;
   client_socket3->recv_buf = g_recv_buf;
   
   socket_creat_client_task("client_task_d",client_socket3);
 
-   osDelay(1000);
+   /*osDelay(1000);
   P_S_Socket_Task_Info client_socket4;
   client_socket4 = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
 
@@ -210,11 +213,37 @@ void serial_task(void const * argument)
   client_socket4->target_server_port = 5566;
   client_socket4->recv_buf = g_recv_buf;
   
-  socket_creat_client_task("client_task_e",client_socket4);
+  socket_creat_client_task("client_task_e",client_socket4);*/
 
   osDelay(1000);
 
-  socket_tcp_server_task((void*)1111);
+  //socket_tcp_server_task((void*)1111);
+
+  P_S_Socket_Task_Info server_socket;
+  server_socket = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
+
+  server_socket->port = 5566;
+  server_socket->task_signal = socket_queueHandle;
+  server_socket->recv_buf = g_recv_buf;
+  socket_creat_server_task("server_task_1",server_socket);
+
+  osDelay(1000);
+  P_S_Socket_Task_Info server_socket2;
+  server_socket2 = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
+
+  server_socket2->port = 1111;
+  server_socket2->task_signal = socket_queueHandle;
+  //server_socket2->recv_buf = g_recv_buf;
+  socket_creat_server_task("server_task_1",server_socket2);
+
+  osDelay(1000);
+  P_S_Socket_Task_Info server_socket3;
+  server_socket3 = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
+
+  server_socket3->port = 1234;
+  server_socket3->task_signal = socket_queueHandle;
+  //server_socket3->recv_buf = g_recv_buf;
+  socket_creat_server_task("server_task_1",server_socket3);
 
   /* osDelay(1000);
   P_S_Socket_Task_Info client_socket5;
@@ -289,7 +318,6 @@ void watcher_task(void const * argument)
   /* USER CODE BEGIN watcher_task */
 	save_task_info();
   	osDelay(2000);
-	socket_tcp_server_task((void*)5566);
 
   /* Infinite loop */
   for(;;)

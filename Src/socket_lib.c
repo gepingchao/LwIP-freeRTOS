@@ -54,7 +54,7 @@ void socket_tcp_client_task(void const * argument)
 	if(ret > 0)
 		{
 			send(s,task_info->recv_buf,ret,0);
-			xQueueSend(task_info->task_signal,(void*)ret,0X2F);
+			//xQueueSend(task_info->task_signal,(void*)(task_info->socket_num),0X2F);
 		}
 	if(ret==-1)
 		{
@@ -75,24 +75,29 @@ void socket_tcp_client_task(void const * argument)
 void socket_tcp_server_task(void const * argument)
 {
 	save_task_info();
+  	P_S_Socket_Task_Info task_info = (P_S_Socket_Task_Info)argument;
 	int s;
 	int ret;
 	int server_len,socklen;
 	int client_fd;
 	int port;
-	//port = 5566;
-	port = (int)argument;
 	struct sockaddr_in cli_sockaddr; 
-	unsigned char buf[100] = {0};
+	unsigned char TCP_Server_RecvBuf[100] = {0};
+	
+	if(task_info->recv_buf == NULL)
+		{
+			task_info->recv_buf = TCP_Server_RecvBuf;
+		}
 	
 	struct sockaddr_in server_sockaddr;  
 
 	
 	start:
+	osDelay(1000);
 	memset(&server_sockaddr, 0, sizeof(server_sockaddr));  
 	server_sockaddr.sin_family = AF_INET;  
 	server_sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	server_sockaddr.sin_port = htons(port);  
+	server_sockaddr.sin_port = htons(task_info->port);  
 	server_len = sizeof(server_sockaddr);
 	
 	s = socket(AF_INET, SOCK_STREAM, 0); 
@@ -111,14 +116,14 @@ void socket_tcp_server_task(void const * argument)
 		{
 			printf("bind error!\r\n");
 			close(s);		
-			return;
+			goto start;
 		}
 	ret = listen(s, 2); 
 	if(-1 == ret)
 		{
 			printf("listen error!\r\n");
-			close(s);		
-			return;		
+			close(s);	
+			goto start;	
 		}
 	
 	socklen = sizeof(cli_sockaddr);
@@ -127,7 +132,7 @@ void socket_tcp_server_task(void const * argument)
 		{
 			printf("accept error!\r\n");
 			close(s);		
-			return;		
+			goto start;;		
 		}
 	else
 		{
@@ -136,11 +141,11 @@ void socket_tcp_server_task(void const * argument)
 	
 	 for(;;)
 	{	
-		ret=read(client_fd,buf,1000);
+		ret=read(client_fd,task_info->recv_buf,1000);
 		if(ret > 0)
 			{
-				write(client_fd,buf,ret);
-				//xQueueSend(task_info->task_signal,(void*)ret,0X2F);
+				write(client_fd,task_info->recv_buf,ret);
+				//xQueueSend(task_info->task_signal,(void*)(task_info->socket_num),0X2F);
 			}
 		if(ret==-1)
 			{
@@ -160,7 +165,7 @@ void socket_tcp_server_task(void const * argument)
 }
 
 
-void socket_creat_client(char* task_name,P_S_Socket_Task_Info task_info)
+/*void socket_creat_client(char* task_name,P_S_Socket_Task_Info task_info)
 {
 	task_info->task_queue.item_sz = 4;
 	task_info->task_queue.queue_sz =5;	
@@ -175,7 +180,7 @@ void socket_creat_client(char* task_name,P_S_Socket_Task_Info task_info)
 	task_info->task_signal= osMessageCreate(&(task_info->task_queue), NULL);
 	task_info->task_handle = osThreadCreate(&(task_info->task),(void*)task_info);
 
-}
+}*/
 
 osThreadId socket_creat_client_task(char* task_name,P_S_Socket_Task_Info task_info)
 {
@@ -207,7 +212,7 @@ osThreadId socket_creat_server_task(char* task_name,P_S_Socket_Task_Info task_in
 		}
 	
 	//task_info->recv_buf = recv_buf;//务必确定接受缓存合法!!
-	task_info->task.pthread = socket_tcp_client_task;
+	task_info->task.pthread = socket_tcp_server_task;
 	task_info->task.stacksize = 200;
 	task_info->task.instances = 0;
 	task_info->task.name = task_name;
