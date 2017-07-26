@@ -10,6 +10,8 @@ typedef char int8;
 #define EFFECT 	0X55
 #define INVALID 	0XAA
 
+#define WATCH_DOG	1
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -30,7 +32,6 @@ typedef char int8;
 #include "gpio.h"
 
 
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
@@ -39,8 +40,12 @@ typedef char int8;
 #include "cpu.h"
 #include "CRC.h"
 #include "socket_lib.h"
+#include "key.h"
+#include "protocol.h"
+#include "relay.h"
+#include "machine_info.h"
 
-//#include "object.h"
+
 #endif
 
 

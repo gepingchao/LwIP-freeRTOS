@@ -373,7 +373,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F107xC</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                           ../Drivers/STM32F1xx_HAL_Driver/Inc;                           ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;                           ../Drivers/CMSIS/Include;                           ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;                        ../Middlewares/Third_Party/LwIP/src/include;                        ../Middlewares/Third_Party/LwIP/src/include/ipv4;                        ../Middlewares/Third_Party/LwIP/system;                        ../Middlewares/Third_Party/LwIP/src/include/ipv4/lwip;                        ../Middlewares/Third_Party/LwIP/src/include/lwip;                        ../Middlewares/Third_Party/LwIP/src/include/netif;                        ../Middlewares/Third_Party/LwIP/src/include/posix;                        ../Middlewares/Third_Party/LwIP/src/include/posix/sys;                        ../Middlewares/Third_Party/LwIP/src/netif/ppp;                        ../Middlewares/Third_Party/LwIP/system/arch;                      ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;                      ../Middlewares/Third_Party/FreeRTOS/Source/include;                      ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS</IncludePath>
+              <IncludePath>../Inc;                                  ../Drivers/STM32F1xx_HAL_Driver/Inc;                                  ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;                                  ../Drivers/CMSIS/Include;                                  ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;                               ../Middlewares/Third_Party/LwIP/src/include;                               ../Middlewares/Third_Party/LwIP/src/include/ipv4;                               ../Middlewares/Third_Party/LwIP/system;                               ../Middlewares/Third_Party/LwIP/src/include/ipv4/lwip;                               ../Middlewares/Third_Party/LwIP/src/include/lwip;                               ../Middlewares/Third_Party/LwIP/src/include/netif;                               ../Middlewares/Third_Party/LwIP/src/include/posix;                               ../Middlewares/Third_Party/LwIP/src/include/posix/sys;                               ../Middlewares/Third_Party/LwIP/src/netif/ppp;                               ../Middlewares/Third_Party/LwIP/system/arch;                             ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;                             ../Middlewares/Third_Party/FreeRTOS/Source/include;                             ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -462,11 +462,6 @@
               <FilePath>../Src/usart.c</FilePath>
             </File>
             <File>
-              <FileName>cJSON.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\cJSON.c</FilePath>
-            </File>
-            <File>
               <FileName>cpu.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\cpu.c</FilePath>
@@ -480,6 +475,41 @@
               <FileName>socket_lib.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\socket_lib.c</FilePath>
+            </File>
+            <File>
+              <FileName>cJSON.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\cJSON.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/iwdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\protocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>relay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\relay.c</FilePath>
+            </File>
+            <File>
+              <FileName>machine_info.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\machine_info.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -555,6 +585,11 @@
               <FileName>stm32f1xx_hal_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_hal_iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_iwdg.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -15,7 +15,7 @@
   serial_queueHandle = osMessageCreate(osMessageQ(serial_queue), NULL);
 
   */
-
+unsigned int g_socket_num;
 
 
 void socket_tcp_client_task(void const * argument)
@@ -23,12 +23,11 @@ void socket_tcp_client_task(void const * argument)
   /* USER CODE BEGIN socket_server_task */
 	save_task_info();
   	P_S_Socket_Task_Info task_info = (P_S_Socket_Task_Info)argument;
-  	//const char server_ip_str[]="192.168.1.179";
-	//const unsigned short server_port=5555;
-	unsigned char TCP_Client_RecvBuf[100]; //TCP客户端接收数据缓冲区
+	unsigned char TCP_Client_Default_RecvBuf[100]; //TCP客户端接收数据缓冲区
 	if(task_info->recv_buf == NULL)
 		{
-			task_info->recv_buf = TCP_Client_RecvBuf;
+			task_info->recv_buf = TCP_Client_Default_RecvBuf;
+			task_info->buf_length = 100;
 		}
 
 	
@@ -41,20 +40,33 @@ void socket_tcp_client_task(void const * argument)
 	local_addr.sin_family = AF_INET;
 	local_addr.sin_port = htons(task_info->target_server_port);
 	s=socket(AF_INET,SOCK_STREAM,0); 
-	printf("client socket number = %d\r\n",s);
-	
-	task_info->socket_num = s;
+	//printf("client socket number = %d\r\n",s);
+	if(-1 == s)
+		{
+			//printf("creat socket error!\r\n");
+		}
+	else
+		{
+			//printf("socket number = %d\r\n",s);
+			task_info->socket_num = s+SOCKET_OFFSET;
+		}
 	ret=connect(s,(struct sockaddr*)&local_addr,sizeof(local_addr));
   /* Infinite loop */
   for(;;)
   {
 	
-	ret=recv(s,task_info->recv_buf,1000,0);
+	ret=recv(s,task_info->recv_buf,task_info->buf_length,0);
 	task_info->recv_length = ret;
 	if(ret > 0)
 		{
-			send(s,task_info->recv_buf,ret,0);
-			//xQueueSend(task_info->task_signal,(void*)(task_info->socket_num),0X2F);
+			if(task_info->socket_deal_function)
+				{
+					task_info->socket_deal_function((void*)(task_info));
+				}
+			else
+				{
+					send(s,task_info->recv_buf,ret,0);
+				}
 		}
 	if(ret==-1)
 		{
@@ -68,7 +80,6 @@ void socket_tcp_client_task(void const * argument)
 			goto start;
 		}
   }
-  /* USER CODE END socket_server_task */
 }
 
 
@@ -80,13 +91,17 @@ void socket_tcp_server_task(void const * argument)
 	int ret;
 	int server_len,socklen;
 	int client_fd;
-	int port;
 	struct sockaddr_in cli_sockaddr; 
-	unsigned char TCP_Server_RecvBuf[100] = {0};
+	unsigned char TCP_Server_Default_RecvBuf[100] = {0};
 	
 	if(task_info->recv_buf == NULL)
 		{
-			task_info->recv_buf = TCP_Server_RecvBuf;
+			task_info->recv_buf = TCP_Server_Default_RecvBuf;
+			task_info->buf_length = 100;
+		}
+	if(task_info->port == 0)
+		{
+			task_info->port = 3630;
 		}
 	
 	struct sockaddr_in server_sockaddr;  
@@ -103,25 +118,26 @@ void socket_tcp_server_task(void const * argument)
 	s = socket(AF_INET, SOCK_STREAM, 0); 
 	if(-1 == ret)
 		{
-			printf("creat socket error!\r\n");
+			//printf("creat socket error!\r\n");
 		}
 	else
 		{
-			printf("socket number = %d\r\n",s);
+			//printf("socket number = %d\r\n",s);
+			task_info->socket_num = s+SOCKET_OFFSET;
 		}
   
 	
 	ret = bind(s, (struct sockaddr *) &server_sockaddr, server_len);
 	if(-1 == ret)
 		{
-			printf("bind error!\r\n");
+			//printf("bind error!\r\n");
 			close(s);		
 			goto start;
 		}
 	ret = listen(s, 2); 
 	if(-1 == ret)
 		{
-			printf("listen error!\r\n");
+			//printf("listen error!\r\n");
 			close(s);	
 			goto start;	
 		}
@@ -130,22 +146,32 @@ void socket_tcp_server_task(void const * argument)
 	client_fd = accept(s, (struct sockaddr *) &cli_sockaddr, (socklen_t*)&socklen);
 	if(-1 == client_fd)
 		{
-			printf("accept error!\r\n");
+			//printf("accept error!\r\n");
 			close(s);		
 			goto start;;		
 		}
 	else
 		{
-			printf("client_id = %d\r\n",client_fd);
+			//printf("client_id = %d\r\n",client_fd);
+			task_info->client_id = client_fd;
 		}
 	
 	 for(;;)
 	{	
-		ret=read(client_fd,task_info->recv_buf,1000);
+		ret=read(client_fd,task_info->recv_buf,task_info->buf_length);
+		task_info->recv_length = ret;
 		if(ret > 0)
 			{
-				write(client_fd,task_info->recv_buf,ret);
-				//xQueueSend(task_info->task_signal,(void*)(task_info->socket_num),0X2F);
+				//g_socket_num = task_info->socket_num;
+				if(task_info->socket_deal_function)
+					{
+						task_info->socket_deal_function((void*)(task_info));
+					}
+				else
+					{
+						write(client_fd,task_info->recv_buf,ret);
+					}
+				task_info->recv_ok = 1;
 			}
 		if(ret==-1)
 			{
@@ -164,23 +190,6 @@ void socket_tcp_server_task(void const * argument)
 
 }
 
-
-/*void socket_creat_client(char* task_name,P_S_Socket_Task_Info task_info)
-{
-	task_info->task_queue.item_sz = 4;
-	task_info->task_queue.queue_sz =5;	
-
-	task_info->task.pthread = socket_tcp_client_task;
-	task_info->task.stacksize = 200;
-	task_info->task.instances = 0;
-	task_info->task.name = task_name;
-	task_info->task.tpriority = osPriorityNormal;
-
-	
-	task_info->task_signal= osMessageCreate(&(task_info->task_queue), NULL);
-	task_info->task_handle = osThreadCreate(&(task_info->task),(void*)task_info);
-
-}*/
 
 osThreadId socket_creat_client_task(char* task_name,P_S_Socket_Task_Info task_info)
 {

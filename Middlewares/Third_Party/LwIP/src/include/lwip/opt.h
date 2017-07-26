@@ -231,7 +231,7 @@
  * (requires the LWIP_RAW option)
  */
 #ifndef MEMP_NUM_RAW_PCB
-#define MEMP_NUM_RAW_PCB                12
+#define MEMP_NUM_RAW_PCB                4
 #endif
 
 /**
@@ -248,7 +248,7 @@
  * (requires the LWIP_TCP option)
  */
 #ifndef MEMP_NUM_TCP_PCB
-#define MEMP_NUM_TCP_PCB                12
+#define MEMP_NUM_TCP_PCB                5
 #endif
 
 /**
@@ -321,7 +321,7 @@
  * (only needed if you use the sequential API, like api_lib.c)
  */
 #ifndef MEMP_NUM_NETBUF
-#define MEMP_NUM_NETBUF                 6
+#define MEMP_NUM_NETBUF                 2
 #endif
 
 /**
@@ -329,7 +329,7 @@
  * (only needed if you use the sequential API, like api_lib.c)
  */
 #ifndef MEMP_NUM_NETCONN
-#define MEMP_NUM_NETCONN                20
+#define MEMP_NUM_NETCONN                10
 #endif
 
 /**

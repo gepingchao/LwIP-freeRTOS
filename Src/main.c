@@ -33,12 +33,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 #include "cmsis_os.h"
+#include "iwdg.h"
 #include "lwip.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "include.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -57,7 +59,7 @@ void MX_FREERTOS_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 
 
-#define COM huart1  //重定向到串口3
+#define COM huart1  //重定向到串口
 
 #ifdef __GNUC__
   /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -107,12 +109,23 @@ int main(void)
   MX_UART5_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
+  MX_IWDG_Init();
+  MX_TIM1_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM5_Init();
+  MX_TIM6_Init();
 
   /* USER CODE BEGIN 2 */
 	//HAL_ETH_ReadPHYRegister(&heth, 0, &phyreg);
 	//HAL_ETH_ReadPHYRegister(&heth, 1, &phyreg);
 	//HAL_ETH_ReadPHYRegister(&heth, 2, &phyreg);
 	//HAL_ETH_ReadPHYRegister(&heth, 3, &phyreg);
+	
+	#if WATCH_DOG
+	HAL_IWDG_Start(&hiwdg);
+	#endif
 
   /* USER CODE END 2 */
 
@@ -147,9 +160,10 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.Prediv1Source = RCC_PREDIV1_SOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;

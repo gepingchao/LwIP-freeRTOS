@@ -49,19 +49,23 @@
 osThreadId systemHandle;
 osThreadId serial_serverHandle;
 osThreadId socket_serverHandle;
-osThreadId watcherHandle;
+osThreadId read_keyHandle;
+osThreadId deal_keyHandle;
 osMessageQId serial_queueHandle;
 osMessageQId socket_queueHandle;
+osMessageQId key_queueHandle;
 
 /* USER CODE BEGIN Variables */
-unsigned char g_recv_buf[1000];
+unsigned char g_recv_buf[3][500];
+extern IWDG_HandleTypeDef hiwdg;
 /* USER CODE END Variables */
 
 /* Function prototypes -------------------------------------------------------*/
 void systrm_task(void const * argument);
 void serial_task(void const * argument);
 void socket_server_task(void const * argument);
-void watcher_task(void const * argument);
+void read_keyr_task(void const * argument);
+void deal_key_task(void const * argument);
 
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -114,9 +118,13 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(socket_server, socket_server_task, osPriorityHigh, 0, 256);
   socket_serverHandle = osThreadCreate(osThread(socket_server), NULL);
 
-  /* definition and creation of watcher */
-  osThreadDef(watcher, watcher_task, osPriorityNormal, 0, 200);
-  watcherHandle = osThreadCreate(osThread(watcher), NULL);
+  /* definition and creation of read_key */
+  osThreadDef(read_key, read_keyr_task, osPriorityNormal, 0, 128);
+  read_keyHandle = osThreadCreate(osThread(read_key), NULL);
+
+  /* definition and creation of deal_key */
+  osThreadDef(deal_key, deal_key_task, osPriorityHigh, 0, 128);
+  deal_keyHandle = osThreadCreate(osThread(deal_key), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -131,6 +139,10 @@ void MX_FREERTOS_Init(void) {
   osMessageQDef(socket_queue, 8, uint32_t);
   socket_queueHandle = osMessageCreate(osMessageQ(socket_queue), NULL);
 
+  /* definition and creation of key_queue */
+  osMessageQDef(key_queue, 8, uint8_t);
+  key_queueHandle = osMessageCreate(osMessageQ(key_queue), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -141,7 +153,6 @@ void systrm_task(void const * argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
-	save_task_info();
 
   /* USER CODE BEGIN systrm_task */
   osDelay(1000);
@@ -158,15 +169,17 @@ void systrm_task(void const * argument)
 void serial_task(void const * argument)
 {
   /* USER CODE BEGIN serial_task */
-  osDelay(2000);
-  unsigned int recvdata;
+	save_task_info();
+ 
+  osDelay(1000);
+  static unsigned int recvdata = 0;
   P_S_Socket_Task_Info client_socket;
   client_socket = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
   
-  sprintf(client_socket->target_server_ip,"192.168.1.179");
+  sprintf(client_socket->target_server_ip,"192.168.1.172");
   client_socket->target_server_port = 5566;
   client_socket->task_signal = socket_queueHandle;
-  client_socket->recv_buf = g_recv_buf;
+  //client_socket->recv_buf = g_recv_buf;
   
   socket_creat_client_task("client_task_a",client_socket);
 
@@ -174,15 +187,15 @@ void serial_task(void const * argument)
   P_S_Socket_Task_Info client_socket1;
   client_socket1 = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
 
-  sprintf(client_socket1->target_server_ip,"192.168.1.179");
+  sprintf(client_socket1->target_server_ip,"192.168.1.172");
   client_socket1->target_server_port = 5566;
   client_socket1->task_signal = socket_queueHandle;
-  client_socket1->recv_buf = g_recv_buf;
+  //client_socket1->recv_buf = g_recv_buf;
   
   socket_creat_client_task("client_task_b",client_socket1);
 
 
-  osDelay(1000);
+  /* osDelay(1000);
   P_S_Socket_Task_Info client_socket2;
   client_socket2 = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
 
@@ -203,7 +216,7 @@ void serial_task(void const * argument)
   client_socket3->task_signal = socket_queueHandle;
   client_socket3->recv_buf = g_recv_buf;
   
-  socket_creat_client_task("client_task_d",client_socket3);
+  socket_creat_client_task("client_task_d",client_socket3);*/
 
    /*osDelay(1000);
   P_S_Socket_Task_Info client_socket4;
@@ -224,7 +237,8 @@ void serial_task(void const * argument)
 
   server_socket->port = 5566;
   server_socket->task_signal = socket_queueHandle;
-  server_socket->recv_buf = g_recv_buf;
+  server_socket->recv_buf = g_recv_buf[0];
+  server_socket->buf_length = 500;
   socket_creat_server_task("server_task_1",server_socket);
 
   osDelay(1000);
@@ -233,8 +247,9 @@ void serial_task(void const * argument)
 
   server_socket2->port = 1111;
   server_socket2->task_signal = socket_queueHandle;
-  //server_socket2->recv_buf = g_recv_buf;
-  socket_creat_server_task("server_task_1",server_socket2);
+  server_socket2->recv_buf = g_recv_buf[1];
+  server_socket2->buf_length = 500;
+  socket_creat_server_task("server_task_2",server_socket2);
 
   osDelay(1000);
   P_S_Socket_Task_Info server_socket3;
@@ -242,8 +257,9 @@ void serial_task(void const * argument)
 
   server_socket3->port = 1234;
   server_socket3->task_signal = socket_queueHandle;
-  //server_socket3->recv_buf = g_recv_buf;
-  socket_creat_server_task("server_task_1",server_socket3);
+  server_socket3->recv_buf = g_recv_buf[2];
+  server_socket3->buf_length = 500;
+  socket_creat_server_task("server_task_3",server_socket3);
 
   /* osDelay(1000);
   P_S_Socket_Task_Info client_socket5;
@@ -260,8 +276,9 @@ void serial_task(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	xQueueReceive(client_socket->task_signal, &recvdata, portMAX_DELAY);
-	send(client_socket->socket_num,client_socket->recv_buf,client_socket->recv_length,0);
+	//xQueueReceive(socket_queueHandle, &recvdata, portMAX_DELAY);
+
+  	osDelay(100);
   }
   /* USER CODE END serial_task */
 }
@@ -272,59 +289,44 @@ void socket_server_task(void const * argument)
   /* USER CODE BEGIN socket_server_task */
 	save_task_info();
   	osDelay(12000);
-  	const char server_ip_str[]="192.168.1.179";
-	const unsigned short server_port=5555;
-	unsigned char TCP_Client_RecvBuf[100]; //TCP客户端接收数据缓冲区
-	start:
-	osDelay(1000);	
-	int ret;
-	int test;
-	struct sockaddr_in local_addr;
-	int s;  
-	local_addr.sin_addr.s_addr = inet_addr(server_ip_str);
-	local_addr.sin_family = AF_INET;
-	local_addr.sin_port = htons(server_port);
-	s=socket(AF_INET,SOCK_STREAM,0); 
-	ret=connect(s,(struct sockaddr*)&local_addr,sizeof(local_addr));
+
   /* Infinite loop */
   for(;;)
   {
-	
-	ret=recv(s,TCP_Client_RecvBuf,1000,0);
-	if(ret > 0)
-		{
-			test++;
-			send(s,TCP_Client_RecvBuf,ret,0);
-		}
-	if(ret==-1)
-		{
-			close(s);
-			test++;
-			goto start;
-		}
-	if(ret == 0)
-		{
-			close(s);
-			test++;
-			goto start;
-		}
+  	osDelay(12000);
   }
   /* USER CODE END socket_server_task */
 }
 
-/* watcher_task function */
-void watcher_task(void const * argument)
+/* read_keyr_task function */
+void read_keyr_task(void const * argument)
 {
-  /* USER CODE BEGIN watcher_task */
-	save_task_info();
-  	osDelay(2000);
-
+  /* USER CODE BEGIN read_keyr_task */
   /* Infinite loop */
   for(;;)
   {
-	osDelay(10);	
+	read_key();
+	osDelay(40);	
+	#if WATCH_DOG
+	HAL_IWDG_Refresh(&hiwdg);
+	#endif
   }
-  /* USER CODE END watcher_task */
+  /* USER CODE END read_keyr_task */
+}
+
+/* deal_key_task function */
+void deal_key_task(void const * argument)
+{
+  /* USER CODE BEGIN deal_key_task */
+  	save_task_info();
+	unsigned char recv_key_value;	
+  /* Infinite loop */
+  for(;;)
+  {
+	xQueueReceive(key_queueHandle, &recv_key_value, portMAX_DELAY);
+	deal_key_value(recv_key_value);
+   }
+  /* USER CODE END deal_key_task */
 }
 
 /* USER CODE BEGIN Application */

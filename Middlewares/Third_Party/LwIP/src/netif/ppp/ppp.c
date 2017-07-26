@@ -1517,6 +1517,7 @@ cifdefaultroute(int pd, u32_t l, u32_t g)
 static void
 pppInputThread(void *arg)
 {
+save_task_info();
   int count;
   PPPControlRx *pcrx = arg;
 

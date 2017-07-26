@@ -286,6 +286,7 @@ slipif_rxbyte_input(struct netif *netif, u8_t c)
 static void
 slipif_loop_thread(void *nf)
 {
+save_task_info();
   u8_t c;
   struct netif *netif = (struct netif *)nf;
   struct slipif_priv *priv = (struct slipif_priv *)netif->state;
