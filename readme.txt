@@ -31,3 +31,16 @@ server_socket->buf_length = 500;//接收缓存大小
 
 socket_creat_server_task("server_task_1",server_socket);
 /******************************************************************************/
+
+
+/**************************************软件定时器***************************************/
+unsigned char register_value_into_timer(unsigned int count_value,unsigned char mod)//mod=1 重复计时器
+创建定时器 返回定时器编号
+
+void register_queue_into_timer(unsigned char space,osMessageQId queue)
+注册定时器溢出通知队列
+
+void register_callback_function_into_timer(unsigned char space,P_TimerCounter_Deal_Function function)
+注册定时器溢出回调函数
+
+
