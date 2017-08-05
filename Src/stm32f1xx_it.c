@@ -38,6 +38,13 @@
 
 /* USER CODE BEGIN 0 */
 
+unsigned int convert_to_exti_msg(unsigned int value)
+{
+	unsigned int data = 0;
+	data = value&0XFFFFFF;
+	return (data|0X2000000);
+}
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/

@@ -48,7 +48,10 @@ typedef char int8;
 #ifndef __RELAY_H__
 #include "machine_info.h"
 #endif
-
+extern osMessageQId serial_queueHandle;
+extern osMessageQId socket_queueHandle;
+extern osMessageQId key_queueHandle;
+extern osMessageQId relay_queueHandle;
 #endif
 
 

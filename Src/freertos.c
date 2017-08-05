@@ -162,7 +162,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   osMessageQDef(relay_queue, 8, uint32_t);
-  key_queueHandle = osMessageCreate(osMessageQ(relay_queue), NULL);
+  relay_queueHandle = osMessageCreate(osMessageQ(relay_queue), NULL);
   /* USER CODE END RTOS_QUEUES */
 }
 
@@ -188,6 +188,10 @@ void serial_task(void const * argument)
 	save_task_info();
  
   osDelay(2000);
+
+	register_queue_into_timer(register_value_into_timer(1200,0),relay_queueHandle);
+	register_queue_into_timer(register_value_into_timer(2000,0),relay_queueHandle);
+  
   //static unsigned int recvdata = 0;
   P_S_Socket_Task_Info client_socket;
   client_socket = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
@@ -357,11 +361,14 @@ void deal_key_task(void const * argument)
 void relay_task(void const * argument)
 {
   /* USER CODE BEGIN relay_task */
+	save_task_info();
+	unsigned int recv_relay_value;	
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
-  }
+	xQueueReceive(relay_queueHandle, &recv_relay_value, portMAX_DELAY);
+	deal_key_value(recv_relay_value);
+   }
   /* USER CODE END relay_task */
 }
 

@@ -1,7 +1,7 @@
 #ifndef __TIMER_OPERAT_H__
 #define __TIMER_OPERAT_H__
 #include "include.h"
-#define MAX_COUNTVALUE_NUMBER	10
+#define MAX_COUNTVALUE_NUMBER	16
 
 //MAX_COUNTVALUE_NUMBER  不可以超过16
 
@@ -32,6 +32,8 @@ typedef struct
 
 
 unsigned char register_value_into_timer(unsigned int count_value,unsigned char mod);
+void register_queue_into_timer(unsigned char space,osMessageQId queue);
+void register_callback_function_into_timer(unsigned char space,P_TimerCounter_Deal_Function function);
 
 void INC_COUNTER_TIMER(void);
 unsigned char timer_free(unsigned char space);

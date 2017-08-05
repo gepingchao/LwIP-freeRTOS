@@ -20,12 +20,19 @@
 
 typedef struct
 {
-	unsigned char owner;//过零检测相位选择
-	unsigned char relay_delaytime;
-	unsigned char relay_num;
+	unsigned char owner:2;//过零检测相位选择
+	unsigned char relay_delaytime:6;
+	unsigned char relay_num:5;
 	unsigned char relay_operat;
 }S_Relay_Msg;
 
+
+
+typedef struct
+{
+	unsigned int action_num;
+	unsigned int status_num;
+}S_RelayOperat,*P_S_RelayOperat;
 
 typedef union
 {
@@ -55,9 +62,21 @@ typedef enum
 
 typedef struct
 {
-	unsigned char realy_status:1;
+	unsigned char is_relay_busy:1;
 	unsigned char zero_phase :2;
+	unsigned char timer_num:5;
 }S_Relay_Status,*P_S_Relay_Status;
+
+typedef struct
+{
+	unsigned short relay_status;
+	S_RelayOperat realy_opeart;
+	S_Relay_Status relay[16];
+}S_Machine_Relay_Info,*P_S_Machine_Relay_Info;
+extern S_Machine_Relay_Info machine_relay_info;
+
+
+//////////////////////////////////////////////////////////////////////////////////
 
 typedef enum
 {	

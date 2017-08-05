@@ -1,6 +1,8 @@
 #include "relay.h"
 
 
+extern osMessageQId key_queueHandle;
+S_Machine_Relay_Info machine_relay_info;
 
 void open_windows(P_S_Windows_Info windows_info)
 {
@@ -211,7 +213,32 @@ unsigned char set_relay_delaytime_into_msg(unsigned int int_msg,unsigned char ms
 }
 
 
+unsigned char get_bit(unsigned int source,unsigned char target_bit)
+{
+	if(target_bit > 31)
+		{
+			return 2;
+		}
+	return source&(1<<target_bit);
+}
 
+void value_set_bit(unsigned int* source,unsigned char target_bit)
+{	
+	if(target_bit > 31)
+		{
+			return;
+		}
+	*source |= (1<<target_bit);
+}
+
+void value_clear_bit(unsigned int* source,unsigned char target_bit)
+{	
+	if(target_bit > 31)
+		{
+			return;
+		}
+	*source &= ~(1<<target_bit);
+}
 
 void task_deal_relay(unsigned int msg_code)
 {
@@ -266,9 +293,42 @@ void task_deal_relay(unsigned int msg_code)
 }
 
 
+void ConnectRelay(unsigned char relay_num)
+{
+	if(machine_relay_info.relay[relay_num].is_relay_busy)
+		{
+			return;
+		}
+	machine_relay_info.relay[relay_num].is_relay_busy = 1;
+	value_set_bit(&(machine_relay_info.realy_opeart.action_num),relay_num);
+	value_set_bit(&(machine_relay_info.realy_opeart.status_num),relay_num);
+	machine_relay_info.relay.timer_num = register_value_into_timer(200,0);//创建一个200ms的单次软件定时器
+	register_queue_into_timer(machine_relay_info.relay.timer_num ,relay_queueHandle);//200ms后向队列relay_queueHandle发送数据
+	switch(machine_relay_info.relay[relay_num].zero_phase)//开启中断
+		{
+			case 0:
+				break;
+			case 1:
+				break;
+			case 2:
+				break;
+			case 3:
+				break;			
+		}
+}
 
 
-
+void DisConnectRelay(unsigned char relay_num)
+{	
+	if(machine_relay_info.relay[relay_num].is_relay_busy)
+		{
+			return;
+		}
+	machine_relay_info.relay[relay_num].is_relay_busy = 1;
+	value_set_bit(&(machine_relay_info.realy_opeart.action_num),relay_num);
+	value_clear_bit(&(machine_relay_info.realy_opeart.status_num),relay_num);
+	
+}
 
 
 

@@ -3,6 +3,14 @@
 
 S_Timer_Counter timer_counter;
 
+unsigned int convert_to_timer_msg(unsigned int value)
+{
+	unsigned int data = 0;
+	data = value&0XFFFFFF;
+	return (data|0X1000000);
+}
+
+
 unsigned char timer_alloc(void)
 {
 	unsigned char loopx;
@@ -65,6 +73,7 @@ void register_callback_function_into_timer(unsigned char space,P_TimerCounter_De
 
 void timer_overflow_function(unsigned char space)
 {
+	unsigned int msg;
 	BaseType_t xHigherPriorityTaskWoken;
 	xHigherPriorityTaskWoken = pdFALSE;
 	
@@ -73,6 +82,19 @@ void timer_overflow_function(unsigned char space)
 	if(timer_counter.timer[space].count_value >timer_counter.timer[space].target_value)
 		{
 			timer_counter.timer[space].overflow_flag = 1;
+			if(timer_counter.timer[space].signal_queue)
+				{
+					//xQueueSendToBackFromISR(timer_counter.timer[space].signal_queue,(void*)space,100);
+					msg = convert_to_timer_msg(space);
+					xQueueSendFromISR(timer_counter.timer[space].signal_queue,&msg,&xHigherPriorityTaskWoken);
+				}
+			if(timer_counter.timer[space].timer_counter_callback_function)
+				{
+					//timer_counter.timer[space].timer_counter_callback_function((void*)&(timer_counter.timer[space]));
+					timer_counter.timer[space].timer_counter_callback_function((void*)space);
+				}
+
+			
 			if(timer_counter.timer[space].repeatability)
 				{
 					//timer_reload(space);
@@ -81,17 +103,6 @@ void timer_overflow_function(unsigned char space)
 			else
 				{
 					timer_free(space);
-				}
-			
-			if(timer_counter.timer[space].signal_queue)
-				{
-					//xQueueSendToBackFromISR(timer_counter.timer[space].signal_queue,(void*)space,100);
-
-					xQueueSendFromISR(timer_counter.timer[space].signal_queue,&space,&xHigherPriorityTaskWoken);
-				}
-			if(timer_counter.timer[space].timer_counter_callback_function)
-				{
-					timer_counter.timer[space].timer_counter_callback_function((void*)&(timer_counter.timer[space]));
 				}
 		}
 }

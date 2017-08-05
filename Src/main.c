@@ -82,6 +82,12 @@ PUTCHAR_PROTOTYPE
   return ch;
 }
 
+void test_timer_call_back(void* arg)
+{
+	unsigned int num;
+	num = (int)arg;
+	printf("timer %d over flow\n\r",num);
+}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -128,12 +134,20 @@ int main(void)
 	#endif
 
 	HAL_TIM_Base_Start_IT(&htim5);
-	register_value_into_timer(2000,1);
+	//register_value_into_timer(2000,1);
+	register_callback_function_into_timer(register_value_into_timer(2000,1),test_timer_call_back);
 	register_value_into_timer(1000,1);
 	register_value_into_timer(1000,0);
 	timer_free(1);
 	register_value_into_timer(3000,0);
 	register_value_into_timer(5000,1);
+	
+	register_callback_function_into_timer(register_value_into_timer(3000,1),test_timer_call_back);
+	
+	register_callback_function_into_timer(register_value_into_timer(2000,1),test_timer_call_back);
+	
+	register_callback_function_into_timer(register_value_into_timer(1000,1),test_timer_call_back);
+
 
   /* USER CODE END 2 */
 
