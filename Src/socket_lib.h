@@ -24,7 +24,7 @@ typedef struct
 	char target_server_ip[18];//Ä¿±ê
 	unsigned int target_server_port;
 
-	unsigned port;
+	unsigned int port;
 	
 	unsigned int recv_length;
 	

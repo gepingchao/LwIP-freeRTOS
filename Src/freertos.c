@@ -43,6 +43,7 @@
 //#include "lwip/ip6_addr.h"
 #include "lwip/sockets.h"
 #include "include.h"
+#include "stats.h"
 /* USER CODE END Includes */
 
 /* Variables -----------------------------------------------------------------*/
@@ -51,21 +52,28 @@ osThreadId serial_serverHandle;
 osThreadId socket_serverHandle;
 osThreadId read_keyHandle;
 osThreadId deal_keyHandle;
+osThreadId relay_serverHandle;
+osThreadId watcherHandle;
 osMessageQId serial_queueHandle;
 osMessageQId socket_queueHandle;
 osMessageQId key_queueHandle;
 
 /* USER CODE BEGIN Variables */
+osMessageQId relay_queueHandle;
+
 unsigned char g_recv_buf[3][500];
 extern IWDG_HandleTypeDef hiwdg;
+extern struct stats_ lwip_stats;
 /* USER CODE END Variables */
 
 /* Function prototypes -------------------------------------------------------*/
-void systrm_task(void const * argument);
+void system_task(void const * argument);
 void serial_task(void const * argument);
 void socket_server_task(void const * argument);
-void read_keyr_task(void const * argument);
+void read_key_task(void const * argument);
 void deal_key_task(void const * argument);
+void relay_task(void const * argument);
+void watcher_task(void const * argument);
 
 extern void MX_LWIP_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -107,7 +115,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of system */
-  osThreadDef(system, systrm_task, osPriorityNormal, 0, 200);
+  osThreadDef(system, system_task, osPriorityNormal, 0, 200);
   systemHandle = osThreadCreate(osThread(system), NULL);
 
   /* definition and creation of serial_server */
@@ -119,12 +127,20 @@ void MX_FREERTOS_Init(void) {
   socket_serverHandle = osThreadCreate(osThread(socket_server), NULL);
 
   /* definition and creation of read_key */
-  osThreadDef(read_key, read_keyr_task, osPriorityNormal, 0, 128);
+  osThreadDef(read_key, read_key_task, osPriorityNormal, 0, 128);
   read_keyHandle = osThreadCreate(osThread(read_key), NULL);
 
   /* definition and creation of deal_key */
   osThreadDef(deal_key, deal_key_task, osPriorityHigh, 0, 128);
   deal_keyHandle = osThreadCreate(osThread(deal_key), NULL);
+
+  /* definition and creation of relay_server */
+  osThreadDef(relay_server, relay_task, osPriorityHigh, 0, 128);
+  relay_serverHandle = osThreadCreate(osThread(relay_server), NULL);
+
+  /* definition and creation of watcher */
+  osThreadDef(watcher, watcher_task, osPriorityNormal, 0, 128);
+  watcherHandle = osThreadCreate(osThread(watcher), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -145,24 +161,24 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+  osMessageQDef(relay_queue, 8, uint32_t);
+  key_queueHandle = osMessageCreate(osMessageQ(relay_queue), NULL);
   /* USER CODE END RTOS_QUEUES */
 }
 
-/* systrm_task function */
-void systrm_task(void const * argument)
+/* system_task function */
+void system_task(void const * argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
 
-  /* USER CODE BEGIN systrm_task */
-  osDelay(1000);
-
+  /* USER CODE BEGIN system_task */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END systrm_task */
+  /* USER CODE END system_task */
 }
 
 /* serial_task function */
@@ -171,8 +187,8 @@ void serial_task(void const * argument)
   /* USER CODE BEGIN serial_task */
 	save_task_info();
  
-  osDelay(1000);
-  static unsigned int recvdata = 0;
+  osDelay(2000);
+  //static unsigned int recvdata = 0;
   P_S_Socket_Task_Info client_socket;
   client_socket = (P_S_Socket_Task_Info)malloc(sizeof(S_Socket_Task_Info));
   
@@ -293,25 +309,33 @@ void socket_server_task(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-  	osDelay(12000);
+  	osDelay(2000);
+	//stats_display_sys(&lwip_stats.sys);
+	//stats_display();
+	  //printf(("\nSYS\n\t"));
+	  //printf("sem.used:  %d\n\r", (u32_t)lwip_stats.sys.sem.used); 
+	  //printf("sem.max:   %d\n\r", (u32_t)lwip_stats.sys.sem.max); 
+	  //printf("sem.err:   %d\n\r", (u32_t)lwip_stats.sys.sem.err); 
+	 // printf("mutex.used: %d\n\r", (u32_t)lwip_stats.sys.mutex.used); 
+	 // printf("mutex.max:  %d\n\r", (u32_t)lwip_stats.sys.mutex.max); 
+	  //printf("mutex.err:  %d\n\r", (u32_t)lwip_stats.sys.mutex.err);
+	  //printf("mbox.used:  %d\n\r", (u32_t)lwip_stats.sys.mbox.used); 
+	 // printf("mbox.max:   %d\n\r", (u32_t)lwip_stats.sys.mbox.max); 
+	 // printf("mbox.err:   %d\n\r", (u32_t)lwip_stats.sys.mbox.err);
   }
   /* USER CODE END socket_server_task */
 }
 
-/* read_keyr_task function */
-void read_keyr_task(void const * argument)
+/* read_key_task function */
+void read_key_task(void const * argument)
 {
-  /* USER CODE BEGIN read_keyr_task */
+  /* USER CODE BEGIN read_key_task */
   /* Infinite loop */
   for(;;)
   {
-	read_key();
-	osDelay(40);	
-	#if WATCH_DOG
-	HAL_IWDG_Refresh(&hiwdg);
-	#endif
+    osDelay(1);
   }
-  /* USER CODE END read_keyr_task */
+  /* USER CODE END read_key_task */
 }
 
 /* deal_key_task function */
@@ -327,6 +351,30 @@ void deal_key_task(void const * argument)
 	deal_key_value(recv_key_value);
    }
   /* USER CODE END deal_key_task */
+}
+
+/* relay_task function */
+void relay_task(void const * argument)
+{
+  /* USER CODE BEGIN relay_task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END relay_task */
+}
+
+/* watcher_task function */
+void watcher_task(void const * argument)
+{
+  /* USER CODE BEGIN watcher_task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END watcher_task */
 }
 
 /* USER CODE BEGIN Application */

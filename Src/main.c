@@ -127,6 +127,14 @@ int main(void)
 	HAL_IWDG_Start(&hiwdg);
 	#endif
 
+	HAL_TIM_Base_Start_IT(&htim5);
+	register_value_into_timer(2000,1);
+	register_value_into_timer(1000,1);
+	register_value_into_timer(1000,0);
+	timer_free(1);
+	register_value_into_timer(3000,0);
+	register_value_into_timer(5000,1);
+
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -211,6 +219,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 /* USER CODE BEGIN Callback 0 */
 
+	if (htim->Instance == TIM5) {
+		INC_COUNTER_TIMER();
+	}
 /* USER CODE END Callback 0 */
   if (htim->Instance == TIM7) {
     HAL_IncTick();

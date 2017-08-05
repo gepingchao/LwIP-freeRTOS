@@ -31,7 +31,7 @@ void socket_tcp_client_task(void const * argument)
 		}
 
 	
-	start:
+	start_client:
 	osDelay(1000);	
 	int ret;
 	struct sockaddr_in local_addr;
@@ -72,12 +72,12 @@ void socket_tcp_client_task(void const * argument)
 		{
 			close(s);
 			osDelay(100);
-			goto start;
+			goto start_client;
 		}
 	if(ret == 0)
 		{
 			close(s);
-			goto start;
+			goto start_client;
 		}
   }
 }
@@ -107,7 +107,7 @@ void socket_tcp_server_task(void const * argument)
 	struct sockaddr_in server_sockaddr;  
 
 	
-	start:
+	start_server:
 	osDelay(1000);
 	memset(&server_sockaddr, 0, sizeof(server_sockaddr));  
 	server_sockaddr.sin_family = AF_INET;  
@@ -132,14 +132,14 @@ void socket_tcp_server_task(void const * argument)
 		{
 			//printf("bind error!\r\n");
 			close(s);		
-			goto start;
+			goto start_server;
 		}
 	ret = listen(s, 2); 
 	if(-1 == ret)
 		{
 			//printf("listen error!\r\n");
 			close(s);	
-			goto start;	
+			goto start_server;	
 		}
 	
 	socklen = sizeof(cli_sockaddr);
@@ -148,7 +148,7 @@ void socket_tcp_server_task(void const * argument)
 		{
 			//printf("accept error!\r\n");
 			close(s);		
-			goto start;;		
+			goto start_server;;		
 		}
 	else
 		{
@@ -177,14 +177,14 @@ void socket_tcp_server_task(void const * argument)
 			{
 				close(s);					
 				close(client_fd);
-				goto start;
+				goto start_server;
 			}
 		if(ret == 0)
 			{
 			
 				close(s);					
 				close(client_fd);		
-				goto start;
+				goto start_server;
 			}
 	 	}
 
@@ -205,7 +205,7 @@ osThreadId socket_creat_client_task(char* task_name,P_S_Socket_Task_Info task_in
 	task_info->task.stacksize = 200;
 	task_info->task.instances = 0;
 	task_info->task.name = task_name;
-	task_info->task.tpriority = osPriorityNormal;	
+	task_info->task.tpriority = osPriorityHigh;	
 	task_info->task_handle = osThreadCreate(&(task_info->task),(void*)task_info);
 	return task_info->task_handle;
 }
@@ -225,11 +225,20 @@ osThreadId socket_creat_server_task(char* task_name,P_S_Socket_Task_Info task_in
 	task_info->task.stacksize = 200;
 	task_info->task.instances = 0;
 	task_info->task.name = task_name;
-	task_info->task.tpriority = osPriorityNormal;	
+	task_info->task.tpriority = osPriorityHigh;	
 	task_info->task_handle = osThreadCreate(&(task_info->task),(void*)task_info);
 	return task_info->task_handle;
 }
 
 
+
+
+
+void socket_deal_function_demo(void* arg)
+{
+	//P_S_Socket_Task_Info task_info = (P_S_Socket_Task_Info)arg;
+	//task_info->recv_length;
+	return;
+}
 
 
