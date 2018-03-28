@@ -43,4 +43,5 @@ void register_queue_into_timer(unsigned char space,osMessageQId queue)
 void register_callback_function_into_timer(unsigned char space,P_TimerCounter_Deal_Function function)
 注册定时器溢出回调函数
 
+后期添加超时置值函数
 
